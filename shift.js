@@ -20,27 +20,46 @@ var shift = {
     draw: function(data,x,y){
         shift.context.putImageData(data, 0, 0);
     },
+    error: function(value){
+        if(isNaN(value)){
+            alert("This function requires a number between 0 and 255");      
+            return 0;
+        } else {
+            if(value > -1 && value > 256){
+                alert("This function requires the value to be between 0 and 255");
+                return 0;
+            } else {
+                return value;
+            }
+        }
+    },
     //These are the actual working filters that are used
     baw:function(){
-		var tmp = shift.getImageData;
-		for(var i = 0; i < tmp.length; i += 4) {
-			var brightness = 0.34 * tmp[i] + 0.5 * tmp[i + 1] + 0.16 * tmp[i + 2];
-			tmp[i] = brightness;
-			tmp[i + 1] = brightness;
-			tmp[i + 2] = brightness;
+		var temp = shift.context.getImageData(0, 0, shift.image.width, shift.image.height);
+        var data = temp.data;
+		for (var i = 0; i < data.length; i += 4) {
+			var brightness = 0.34 * data[i] + 0.5 * data[i + 1] + 0.16 * data[i + 2];
+			data[i] = brightness;
+			data[i + 1] = brightness;
+			data[i + 2] = brightness;
 		}
-		shift.draw(tmp,0,0);
+        temp.data = data;
+        shift.draw(temp,0,0);
 	},
     dark:function(adjustment){
-		var tmp = shift.getImageData;
-		for (var i = 0; i < tmp.length; i += 4) {
-			 var red = tmp[i+0] = tmp[i+0] - adjustment; // red
-		     var green = tmp[i+1] = tmp[i+1] - adjustment; // green
-		     var blue = tmp[i+2] = tmp[i+2] - adjustment; 
+        adjustment = shift.error(adjustment);
+		var temp = shift.context.getImageData(0, 0, shift.image.width, shift.image.height);
+        var data = temp.data;
+		for (var i = 0; i < data.length; i += 4) {
+			 var red = data[i+0] = data[i+0] - adjustment; // red
+		     var green = data[i+1] = data[i+1] - adjustment; // green
+		     var blue = data[i+2] = data[i+2] - adjustment; 
 		}
-		shift.draw(tmp,0,0);
+		temp.data = data;
+        shift.draw(temp,0,0);
 	},
     neg:function(adjustment){
+        adjustment = shift.error(adjustment);
         var temp = shift.context.getImageData(0, 0, shift.image.width, shift.image.height);
         var data = temp.data;
 		for (var i = 0; i < data.length; i += 4) {
@@ -84,13 +103,14 @@ var shift = {
 		shift.draw(temp,0,0);
 	},
     convolute:function(weights){
-		var tmp = shift.getImageData;
+		var temp = shift.context.getImageData(0, 0, shift.image.width, shift.image.height);
+        var data = temp.data;
 		// [ 0, -1, 0, -1, 5, -1, 0, -1, 0];
 		var side = Math.round(Math.sqrt(weights.length));
 		var halfSide = Math.floor(side/2);
-		var src = tmp.data;
-		var sw = tmp.width;
-		var sh = tmp.height;
+		var src = data;
+		var sw = data.width;
+		var sh = data.height;
 		var w = sw;
 		var h = sh;
 		var opaque = 127;
@@ -114,15 +134,13 @@ var shift = {
 						}
 					}
 				}
-				tmp[i]     = r; // red
-			    tmp[i + 1] = g; // green
-			    tmp[i + 2] = b; // blue
-				tmp[i + 3] = a + alphaFac*(255-a);
+				data[i]     = r; // red
+			    data[i + 1] = g; // green
+			    data[i + 2] = b; // blue
+				data[i + 3] = a + alphaFac*(255-a);
 			}
 		}
-		shift.draw(tmp,0,0);
+		temp.data = data;
+		shift.draw(temp,0,0);
 	},
-    
-    
-
 };
